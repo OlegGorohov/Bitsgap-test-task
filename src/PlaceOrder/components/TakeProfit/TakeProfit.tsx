@@ -28,6 +28,7 @@ const TakeProfit: React.FC<Props> = observer(({ orderSide }) => {
     addProfitTarget,
     updateProfitTargets,
     price,
+    projectProfit,
   } = useStore();
 
   const isDisplayButton = useMemo(() => profitTargets.length < MAX_ROWS, [
@@ -105,7 +106,7 @@ const TakeProfit: React.FC<Props> = observer(({ orderSide }) => {
               Projected profit
             </span>
             <span className={b("projected-profit-value")}>
-              <span>0</span>
+              <span>{projectProfit}</span>
               <span className={b("projected-profit-currency")}>
                 {QUOTE_CURRENCY}
               </span>

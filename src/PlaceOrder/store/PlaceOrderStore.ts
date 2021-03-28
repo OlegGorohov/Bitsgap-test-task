@@ -10,6 +10,28 @@ export class PlaceOrderStore {
   @observable isTakeProfitSwitchOn: boolean = false;
   @observable profitTargets: ProfitTarget[] = [];
 
+  @computed get projectProfit(): string {
+    let res = 0;
+
+    if (this.profitTargets.length > 0) {
+      res = this.profitTargets
+        .map((row) => {
+          const multiplier = this.activeOrderSide === "buy" ? 1 : -1;
+
+          return (
+            multiplier *
+            (row.amountToSell * this.amount * 0.01) *
+            (row.tradePrice - this.price)
+          );
+        })
+        .reduce((sum, item) => {
+          return sum + item;
+        });
+    }
+
+    return res.toFixed(2);
+  }
+
   @computed get total(): number {
     return this.price * this.amount;
   }
