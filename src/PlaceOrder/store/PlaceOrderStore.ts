@@ -1,22 +1,14 @@
 import { observable, computed, action } from "mobx";
 
 import { OrderSide, ProfitTarget } from "../model";
-
-const defaultProfitTargets: ProfitTarget[] = [
-  {
-    id: 0,
-    profit: 2,
-    tradePrice: 0,
-    amountToSell: 100,
-  },
-];
+import { MIN_AMOUNT_TO_SELL } from "PlaceOrder/constants";
 
 export class PlaceOrderStore {
   @observable activeOrderSide: OrderSide = "buy";
   @observable price: number = 0;
   @observable amount: number = 0;
   @observable isTakeProfitSwitchOn: boolean = false;
-  @observable profitTargets: ProfitTarget[] = defaultProfitTargets;
+  @observable profitTargets: ProfitTarget[] = [];
 
   @computed get total(): number {
     return this.price * this.amount;
@@ -54,7 +46,7 @@ export class PlaceOrderStore {
   @action.bound
   public setIsTakeProfitSwitchOn(value: boolean) {
     if (value) {
-      this.setProfitTargets(defaultProfitTargets);
+      this.setProfitTargets([this.getDefaultProfitTarget()]);
     }
 
     this.isTakeProfitSwitchOn = value;
@@ -69,19 +61,48 @@ export class PlaceOrderStore {
   public addProfitTarget() {
     const lastItem = [...this.profitTargets][this.profitTargets.length - 1];
     const newInputs = this.profitTargets.map((item) => {
-      if (item.id === 0 && item.amountToSell !== 20) {
-        return { ...item, amountToSell: item.amountToSell - 20 };
+      if (item.id === 0 && item.amountToSell !== MIN_AMOUNT_TO_SELL) {
+        return {
+          ...item,
+          amountToSell: item.amountToSell - MIN_AMOUNT_TO_SELL,
+        };
       }
 
       return item;
     });
+
+    const newProfit = lastItem.profit + 2;
     const newInput = {
       id: lastItem.id + 1,
-      profit: lastItem.profit + 2,
-      tradePrice: 0,
-      amountToSell: 20,
+      profit: newProfit,
+      tradePrice: this.getTradePrice(newProfit),
+      amountToSell: MIN_AMOUNT_TO_SELL,
     };
 
     this.setProfitTargets([...newInputs, newInput]);
+  }
+
+  @action.bound
+  public updateProfitTargets(price: number) {
+    const newProfitTargets = this.profitTargets.map((row) => {
+      return { ...row, tradePrice: this.getTradePrice(row.profit, price) };
+    });
+
+    this.setProfitTargets(newProfitTargets);
+  }
+
+  @action.bound
+  private getDefaultProfitTarget(): ProfitTarget {
+    return {
+      id: 0,
+      profit: 2,
+      tradePrice: this.getTradePrice(2),
+      amountToSell: 100,
+    };
+  }
+
+  @action.bound
+  private getTradePrice(profit: number, price = this.price): number {
+    return price + price * profit * 0.01;
   }
 }

@@ -1,13 +1,13 @@
 /* eslint @typescript-eslint/no-use-before-define: 0 */
 
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import block from "bem-cn-lite";
 import { AddCircle, Cancel } from "@material-ui/icons";
 import { observer } from "mobx-react";
 
 import { Switch, TextButton, NumberInput } from "components";
 
-import { QUOTE_CURRENCY } from "../../constants";
+import { QUOTE_CURRENCY, MAX_ROWS } from "../../constants";
 import { useStore } from "../../context";
 import { OrderSide } from "../../model";
 import "./TakeProfit.scss";
@@ -26,9 +26,11 @@ const TakeProfit: React.FC<Props> = observer(({ orderSide }) => {
     profitTargets,
     removeProfitTarget,
     addProfitTarget,
+    updateProfitTargets,
+    price,
   } = useStore();
 
-  const isDisplayButton = useMemo(() => profitTargets.length < 5, [
+  const isDisplayButton = useMemo(() => profitTargets.length < MAX_ROWS, [
     profitTargets.length,
   ]);
 
@@ -73,6 +75,10 @@ const TakeProfit: React.FC<Props> = observer(({ orderSide }) => {
     [orderSide]
   );
 
+  useEffect(() => {
+    updateProfitTargets(price);
+  }, [price, updateProfitTargets]);
+
   return (
     <div className={b()}>
       <div className={b("switch")}>
@@ -90,7 +96,7 @@ const TakeProfit: React.FC<Props> = observer(({ orderSide }) => {
             <TextButton className={b("add-button")}>
               <AddCircle className={b("add-icon")} />
               <span onClick={addProfitTarget}>
-                Add profit target {profitTargets.length}/5
+                Add profit target {profitTargets.length}/{MAX_ROWS}
               </span>
             </TextButton>
           )}
