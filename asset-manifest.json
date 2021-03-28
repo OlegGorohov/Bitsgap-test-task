@@ -1,19 +1,19 @@
 {
   "files": {
-    "main.css": "/static/css/main.85734019.chunk.css",
-    "main.js": "/static/js/main.0bc46409.chunk.js",
-    "main.js.map": "/static/js/main.0bc46409.chunk.js.map",
-    "runtime-main.js": "/static/js/runtime-main.a49f18e3.js",
-    "runtime-main.js.map": "/static/js/runtime-main.a49f18e3.js.map",
-    "static/js/2.261d23ff.chunk.js": "/static/js/2.261d23ff.chunk.js",
-    "static/js/2.261d23ff.chunk.js.map": "/static/js/2.261d23ff.chunk.js.map",
-    "index.html": "/index.html",
-    "static/css/main.85734019.chunk.css.map": "/static/css/main.85734019.chunk.css.map",
-    "static/js/2.261d23ff.chunk.js.LICENSE.txt": "/static/js/2.261d23ff.chunk.js.LICENSE.txt"
+    "main.css": "/Bitsgap-test-task//static/css/main.85734019.chunk.css",
+    "main.js": "/Bitsgap-test-task//static/js/main.0bc46409.chunk.js",
+    "main.js.map": "/Bitsgap-test-task//static/js/main.0bc46409.chunk.js.map",
+    "runtime-main.js": "/Bitsgap-test-task//static/js/runtime-main.b7663119.js",
+    "runtime-main.js.map": "/Bitsgap-test-task//static/js/runtime-main.b7663119.js.map",
+    "static/js/2.514d4f44.chunk.js": "/Bitsgap-test-task//static/js/2.514d4f44.chunk.js",
+    "static/js/2.514d4f44.chunk.js.map": "/Bitsgap-test-task//static/js/2.514d4f44.chunk.js.map",
+    "index.html": "/Bitsgap-test-task//index.html",
+    "static/css/main.85734019.chunk.css.map": "/Bitsgap-test-task//static/css/main.85734019.chunk.css.map",
+    "static/js/2.514d4f44.chunk.js.LICENSE.txt": "/Bitsgap-test-task//static/js/2.514d4f44.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
-    "static/js/runtime-main.a49f18e3.js",
-    "static/js/2.261d23ff.chunk.js",
+    "static/js/runtime-main.b7663119.js",
+    "static/js/2.514d4f44.chunk.js",
     "static/css/main.85734019.chunk.css",
     "static/js/main.0bc46409.chunk.js"
   ]
