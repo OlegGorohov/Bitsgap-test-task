@@ -1,6 +1,11 @@
 import { observable, computed, action } from "mobx";
 
-import { OrderSide, ProfitTarget } from "../model";
+import {
+  OrderSide,
+  ProfitTarget,
+  ErrorsEnum,
+  ProfitTargetError,
+} from "../model";
 import { DEFAULT_AMOUNT_TO_SELL } from "PlaceOrder/constants";
 
 export class PlaceOrderStore {
@@ -9,6 +14,7 @@ export class PlaceOrderStore {
   @observable amount: number = 0;
   @observable isTakeProfitSwitchOn: boolean = false;
   @observable profitTargets: ProfitTarget[] = [];
+  @observable errors: ProfitTargetError[] | null = null;
 
   @computed get projectProfit(): string {
     let res = 0;
@@ -62,6 +68,10 @@ export class PlaceOrderStore {
       this.setIsTakeProfitSwitchOn(false);
     }
 
+    if (this.errors) {
+      this.setErrors(null);
+    }
+
     this.profitTargets = inputs;
   }
 
@@ -77,6 +87,10 @@ export class PlaceOrderStore {
   @action.bound
   public removeProfitTarget(id: number) {
     this.setProfitTargets(this.profitTargets.filter((item) => item.id !== id));
+
+    if (this.errors) {
+      this.setErrors(null);
+    }
   }
 
   @action.bound
@@ -127,6 +141,10 @@ export class PlaceOrderStore {
       ...this.getNewProfitTargets(),
       this.getNewProfitTarget(),
     ]);
+
+    if (this.errors) {
+      this.setErrors(null);
+    }
   }
 
   @action.bound
@@ -156,6 +174,10 @@ export class PlaceOrderStore {
         update(this.getProfit(this.profitTargets[id]?.tradePrice ?? 0))
       );
     }
+
+    if (this.errors) {
+      this.setErrors(null);
+    }
   }
 
   @action.bound
@@ -179,11 +201,82 @@ export class PlaceOrderStore {
 
   @action.bound
   private getTradePrice(profit: number, price = this.price): number {
-    return price + price * profit * 0.01;
+    return +(price + price * profit * 0.01).toFixed(2);
   }
 
   @action.bound
   private getProfit(tradePrice: number, price = this.price): number {
     return price ? +(((tradePrice - price) / price) * 100).toFixed(2) : 0;
+  }
+
+  @action.bound
+  public setErrors(errors: ProfitTargetError[] | null) {
+    this.errors = errors;
+  }
+
+  @action.bound
+  public validation(): boolean {
+    let isValid = true;
+    let sumProfit = 0;
+    let sumAmount = 0;
+    let prevProfit = 0;
+    let errors = [] as ProfitTargetError[];
+
+    this.profitTargets.forEach((item) => {
+      let newError = {} as ProfitTargetError;
+
+      if (item.profit <= prevProfit) {
+        newError = {
+          ...newError,
+          profit: { text: ErrorsEnum.PreviousValue, id: item.id },
+        };
+        isValid = false;
+      }
+
+      if (item.tradePrice <= 0) {
+        newError = {
+          ...newError,
+          tradePrice: { text: ErrorsEnum.MinTradePrice, id: item.id },
+        };
+        isValid = false;
+      }
+
+      if (item.profit < 0.01) {
+        newError = {
+          ...newError,
+          profit: { text: ErrorsEnum.MinProfitValue, id: item.id },
+        };
+        isValid = false;
+      }
+
+      sumAmount += item.amountToSell;
+      sumProfit += item.profit;
+      prevProfit = item.profit;
+      errors[item.id] = newError;
+    });
+
+    if (sumProfit > 500) {
+      errors = errors.map((item) => ({
+        ...item,
+        profit: {
+          text: ErrorsEnum.SumProfit,
+        },
+      }));
+      isValid = false;
+    }
+
+    if (sumAmount > 100) {
+      errors = errors.map((item) => ({
+        ...item,
+        amountToSell: {
+          text: `${sumAmount} ${ErrorsEnum.SumAmount} ${sumAmount - 100}`,
+        },
+      }));
+      isValid = false;
+    }
+
+    this.setErrors(errors);
+
+    return isValid;
   }
 }

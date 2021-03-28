@@ -22,10 +22,18 @@ export const PlaceOrderForm = observer(() => {
     setAmount,
     setTotal,
     setOrderSide,
+    validation,
   } = useStore();
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validation()) {
+      // send
+    }
+  };
+
   return (
-    <form className={b()}>
+    <form className={b()} onSubmit={handleSubmit}>
       <div className={b("header")}>
         Binance: {`${BASE_CURRENCY} / ${QUOTE_CURRENCY}`}
       </div>

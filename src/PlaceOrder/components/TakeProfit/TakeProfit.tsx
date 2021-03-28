@@ -1,6 +1,6 @@
 /* eslint @typescript-eslint/no-use-before-define: 0 */
 
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo, useEffect, useCallback } from "react";
 import block from "bem-cn-lite";
 import { AddCircle, Cancel } from "@material-ui/icons";
 import { observer } from "mobx-react";
@@ -9,12 +9,11 @@ import { Switch, TextButton, NumberInput } from "components";
 
 import { QUOTE_CURRENCY, MAX_ROWS } from "../../constants";
 import { useStore } from "../../context";
-import { OrderSide } from "../../model";
+import { OrderSide, ProfitTargetEnum, ProfitTargetError } from "../../model";
 import "./TakeProfit.scss";
 
 type Props = {
   orderSide: OrderSide;
-  // ...
 };
 
 const b = block("take-profit");
@@ -30,47 +29,80 @@ const TakeProfit: React.FC<Props> = observer(({ orderSide }) => {
     price,
     projectProfit,
     updateField,
+    errors,
   } = useStore();
 
   const isDisplayButton = useMemo(() => profitTargets.length < MAX_ROWS, [
     profitTargets.length,
   ]);
 
+  const getErrorText = useCallback(
+    (id: number, field: keyof ProfitTargetError): string => {
+      const error = errors?.[id]?.[field];
+
+      if (errors && (error?.id || error?.id === 0)) {
+        return errors[id][field].id === id ? errors[id][field].text : "1";
+      }
+
+      return error?.text ?? "";
+    },
+    [errors]
+  );
+
   const renderInputs = useMemo(
     (): JSX.Element[] =>
-      profitTargets.map(({ id, profit, tradePrice, amountToSell }) => (
-        <div className={b("inputs")} key={id}>
-          <NumberInput
-            value={profit}
-            InputProps={{ endAdornment: "%" }}
-            variant="underlined"
-            onChange={(value: number) => updateField("profit", id, value)}
-            onBlur={() => {
-              updateField("tradePrice", id);
-            }}
-          />
-          <NumberInput
-            value={tradePrice}
-            InputProps={{ endAdornment: QUOTE_CURRENCY }}
-            variant="underlined"
-            onChange={(value: number) => updateField("tradePrice", id, value)}
-            onBlur={() => {
-              updateField("profit", id);
-            }}
-          />
-          <NumberInput
-            value={amountToSell}
-            decimalScale={2}
-            InputProps={{ endAdornment: "%" }}
-            variant="underlined"
-            onBlur={(value: number) => updateField("amountToSell", id, value)}
-          />
-          <div className={b("cancel-icon")}>
-            <Cancel onClick={() => removeProfitTarget(id)} />
+      profitTargets.map(({ id, profit, tradePrice, amountToSell }) => {
+        const profitError = getErrorText(id, ProfitTargetEnum.Profit);
+        const tradePriceError = getErrorText(id, ProfitTargetEnum.TradePrice);
+        const amountError = getErrorText(id, ProfitTargetEnum.AmountToSell);
+
+        return (
+          <div className={b("inputs")} key={id}>
+            <NumberInput
+              value={profit}
+              InputProps={{ endAdornment: "%" }}
+              variant="underlined"
+              onChange={(value: number) =>
+                updateField(ProfitTargetEnum.Profit, id, value)
+              }
+              onBlur={() => {
+                updateField(ProfitTargetEnum.TradePrice, id);
+              }}
+              error={profitError}
+            />
+            <NumberInput
+              value={tradePrice}
+              InputProps={{ endAdornment: QUOTE_CURRENCY }}
+              variant="underlined"
+              onChange={(value: number) =>
+                updateField(ProfitTargetEnum.TradePrice, id, value)
+              }
+              onBlur={() => {
+                updateField(ProfitTargetEnum.Profit, id);
+              }}
+              error={tradePriceError}
+            />
+            <NumberInput
+              value={amountToSell}
+              decimalScale={2}
+              InputProps={{ endAdornment: "%" }}
+              variant="underlined"
+              onBlur={(value: number) => {
+                updateField(ProfitTargetEnum.AmountToSell, id, value);
+              }}
+              error={amountError}
+            />
+            <div className={b("cancel-icon")}>
+              <Cancel
+                onClick={() => {
+                  removeProfitTarget(id);
+                }}
+              />
+            </div>
           </div>
-        </div>
-      )),
-    [profitTargets, removeProfitTarget, updateField]
+        );
+      }),
+    [profitTargets, getErrorText, updateField, removeProfitTarget]
   );
 
   const renderTitles = useMemo(
