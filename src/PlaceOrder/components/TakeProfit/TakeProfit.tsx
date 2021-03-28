@@ -42,7 +42,6 @@ const TakeProfit: React.FC<Props> = observer(({ orderSide }) => {
         <div className={b("inputs")} key={id}>
           <NumberInput
             value={profit}
-            decimalScale={2}
             InputProps={{ endAdornment: "%" }}
             variant="underlined"
             onChange={(value: number) => updateField("profit", id, value)}
@@ -52,7 +51,6 @@ const TakeProfit: React.FC<Props> = observer(({ orderSide }) => {
           />
           <NumberInput
             value={tradePrice}
-            decimalScale={2}
             InputProps={{ endAdornment: QUOTE_CURRENCY }}
             variant="underlined"
             onChange={(value: number) => updateField("tradePrice", id, value)}

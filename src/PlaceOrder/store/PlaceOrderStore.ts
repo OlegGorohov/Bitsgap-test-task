@@ -1,7 +1,7 @@
 import { observable, computed, action } from "mobx";
 
 import { OrderSide, ProfitTarget } from "../model";
-import { MIN_AMOUNT_TO_SELL } from "PlaceOrder/constants";
+import { DEFAULT_AMOUNT_TO_SELL } from "PlaceOrder/constants";
 
 export class PlaceOrderStore {
   @observable activeOrderSide: OrderSide = "buy";
@@ -80,28 +80,53 @@ export class PlaceOrderStore {
   }
 
   @action.bound
-  public addProfitTarget() {
-    const lastItem = [...this.profitTargets][this.profitTargets.length - 1];
-    const newInputs = this.profitTargets.map((item) => {
-      if (item.id === 0 && item.amountToSell !== MIN_AMOUNT_TO_SELL) {
+  private getNewProfitTarget(): ProfitTarget {
+    const lastItem = this.profitTargets[this.profitTargets.length - 1];
+    const newProfit = lastItem.profit + 2;
+
+    return {
+      id: lastItem.id + 1,
+      profit: newProfit,
+      tradePrice: this.getTradePrice(newProfit),
+      amountToSell: DEFAULT_AMOUNT_TO_SELL,
+    };
+  }
+
+  @action.bound
+  private getNewProfitTargets(): ProfitTarget[] {
+    let itemMaxId = 0;
+    let maxValue = 0;
+    let sumValue = 0;
+
+    this.profitTargets.forEach((item) => {
+      if (item.amountToSell > maxValue) {
+        maxValue = item.amountToSell;
+        itemMaxId = item.id;
+      }
+      sumValue += item.amountToSell;
+    });
+
+    return this.profitTargets.map((item) => {
+      if (item.id === itemMaxId) {
         return {
           ...item,
-          amountToSell: item.amountToSell - MIN_AMOUNT_TO_SELL,
+          amountToSell:
+            sumValue > 100 - DEFAULT_AMOUNT_TO_SELL
+              ? item.amountToSell - (sumValue - (100 - DEFAULT_AMOUNT_TO_SELL))
+              : item.amountToSell,
         };
       }
 
       return item;
     });
+  }
 
-    const newProfit = lastItem.profit + 2;
-    const newInput = {
-      id: lastItem.id + 1,
-      profit: newProfit,
-      tradePrice: this.getTradePrice(newProfit),
-      amountToSell: MIN_AMOUNT_TO_SELL,
-    };
-
-    this.setProfitTargets([...newInputs, newInput]);
+  @action.bound
+  public addProfitTarget() {
+    this.setProfitTargets([
+      ...this.getNewProfitTargets(),
+      this.getNewProfitTarget(),
+    ]);
   }
 
   @action.bound
@@ -124,11 +149,11 @@ export class PlaceOrderStore {
       this.setProfitTargets(update(Number(value)));
     } else if (field === "tradePrice") {
       this.setProfitTargets(
-        update(this.getTradePrice(this.profitTargets[id].profit))
+        update(this.getTradePrice(this.profitTargets[id]?.profit ?? 0))
       );
     } else if (field === "profit") {
       this.setProfitTargets(
-        update(this.getProfit(this.profitTargets[id].tradePrice))
+        update(this.getProfit(this.profitTargets[id]?.tradePrice ?? 0))
       );
     }
   }
