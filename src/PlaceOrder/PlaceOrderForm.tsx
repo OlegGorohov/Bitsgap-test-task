@@ -21,7 +21,7 @@ export const PlaceOrderForm = observer(() => {
     setPrice,
     setAmount,
     setTotal,
-    setOrderSide
+    setOrderSide,
   } = useStore();
 
   return (

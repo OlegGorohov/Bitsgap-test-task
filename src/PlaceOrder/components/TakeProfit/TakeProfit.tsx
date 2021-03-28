@@ -1,12 +1,14 @@
 /* eslint @typescript-eslint/no-use-before-define: 0 */
 
-import React, { useState } from "react";
+import React, { useMemo } from "react";
 import block from "bem-cn-lite";
 import { AddCircle, Cancel } from "@material-ui/icons";
+import { observer } from "mobx-react";
 
 import { Switch, TextButton, NumberInput } from "components";
 
 import { QUOTE_CURRENCY } from "../../constants";
+import { useStore } from "../../context";
 import { OrderSide } from "../../model";
 import "./TakeProfit.scss";
 
@@ -17,61 +19,81 @@ type Props = {
 
 const b = block("take-profit");
 
-const TakeProfit = ({ orderSide }: Props) => {
-  const [isChecked, setIsChecked] = useState(false);
+const TakeProfit: React.FC<Props> = observer(({ orderSide }) => {
+  const {
+    isTakeProfitSwitchOn,
+    setIsTakeProfitSwitchOn,
+    profitTargets,
+    removeProfitTarget,
+    addProfitTarget,
+  } = useStore();
 
-  function renderInputs() {
-    return (
-      <div className={b("inputs")}>
-        <NumberInput
-          value={0}
-          decimalScale={2}
-          InputProps={{ endAdornment: "%" }}
-          variant="underlined"
-        />
-        <NumberInput
-          value={0}
-          decimalScale={2}
-          InputProps={{ endAdornment: QUOTE_CURRENCY }}
-          variant="underlined"
-        />
-        <NumberInput
-          value={0}
-          decimalScale={2}
-          InputProps={{ endAdornment: "%" }}
-          variant="underlined"
-        />
-        <div className={b("cancel-icon")}>
-          <Cancel />
+  const isDisplayButton = useMemo(() => profitTargets.length < 5, [
+    profitTargets.length,
+  ]);
+
+  const renderInputs = useMemo(
+    (): JSX.Element[] =>
+      profitTargets.map(({ id, profit, tradePrice, amountToSell }) => (
+        <div className={b("inputs")} key={id}>
+          <NumberInput
+            value={profit}
+            decimalScale={2}
+            InputProps={{ endAdornment: "%" }}
+            variant="underlined"
+          />
+          <NumberInput
+            value={tradePrice}
+            decimalScale={2}
+            InputProps={{ endAdornment: QUOTE_CURRENCY }}
+            variant="underlined"
+          />
+          <NumberInput
+            value={amountToSell}
+            decimalScale={2}
+            InputProps={{ endAdornment: "%" }}
+            variant="underlined"
+          />
+          <div className={b("cancel-icon")}>
+            <Cancel onClick={() => removeProfitTarget(id)} />
+          </div>
         </div>
-      </div>
-    );
-  }
+      )),
+    [profitTargets, removeProfitTarget]
+  );
 
-  function renderTitles() {
-    return (
+  const renderTitles = useMemo(
+    () => (
       <div className={b("titles")}>
         <span>Profit</span>
         <span>Trade price</span>
         <span>Amount to {orderSide === "buy" ? "sell" : "buy"}</span>
       </div>
-    );
-  }
+    ),
+    [orderSide]
+  );
 
   return (
     <div className={b()}>
       <div className={b("switch")}>
         <span>Take profit</span>
-        <Switch checked={isChecked} onChange={setIsChecked} />
+        <Switch
+          checked={isTakeProfitSwitchOn}
+          onChange={setIsTakeProfitSwitchOn}
+        />
       </div>
-      {isChecked && (
+      {isTakeProfitSwitchOn && (
         <div className={b("content")}>
-          {renderTitles()}
-          {renderInputs()}
-          <TextButton className={b("add-button")}>
-            <AddCircle className={b("add-icon")} />
-            <span>Add profit target 2/5</span>
-          </TextButton>
+          {renderTitles}
+          {renderInputs}
+          {isDisplayButton && (
+            <TextButton className={b("add-button")}>
+              <AddCircle className={b("add-icon")} />
+              <span onClick={addProfitTarget}>
+                Add profit target {profitTargets.length}/5
+              </span>
+            </TextButton>
+          )}
           <div className={b("projected-profit")}>
             <span className={b("projected-profit-title")}>
               Projected profit
@@ -87,6 +109,6 @@ const TakeProfit = ({ orderSide }: Props) => {
       )}
     </div>
   );
-};
+});
 
 export { TakeProfit };
