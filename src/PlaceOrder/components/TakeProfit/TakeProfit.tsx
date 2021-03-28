@@ -29,6 +29,7 @@ const TakeProfit: React.FC<Props> = observer(({ orderSide }) => {
     updateProfitTargets,
     price,
     projectProfit,
+    updateField,
   } = useStore();
 
   const isDisplayButton = useMemo(() => profitTargets.length < MAX_ROWS, [
@@ -44,25 +45,34 @@ const TakeProfit: React.FC<Props> = observer(({ orderSide }) => {
             decimalScale={2}
             InputProps={{ endAdornment: "%" }}
             variant="underlined"
+            onChange={(value: number) => updateField("profit", id, value)}
+            onBlur={() => {
+              updateField("tradePrice", id);
+            }}
           />
           <NumberInput
             value={tradePrice}
             decimalScale={2}
             InputProps={{ endAdornment: QUOTE_CURRENCY }}
             variant="underlined"
+            onChange={(value: number) => updateField("tradePrice", id, value)}
+            onBlur={() => {
+              updateField("profit", id);
+            }}
           />
           <NumberInput
             value={amountToSell}
             decimalScale={2}
             InputProps={{ endAdornment: "%" }}
             variant="underlined"
+            onBlur={(value: number) => updateField("amountToSell", id, value)}
           />
           <div className={b("cancel-icon")}>
             <Cancel onClick={() => removeProfitTarget(id)} />
           </div>
         </div>
       )),
-    [profitTargets, removeProfitTarget]
+    [profitTargets, removeProfitTarget, updateField]
   );
 
   const renderTitles = useMemo(

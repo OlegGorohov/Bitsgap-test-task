@@ -105,6 +105,35 @@ export class PlaceOrderStore {
   }
 
   @action.bound
+  public updateField(
+    field: keyof ProfitTarget,
+    id: number,
+    value?: number | null
+  ) {
+    const update = (value: number) => {
+      return this.profitTargets.map((row) => {
+        if (row.id === id) {
+          return { ...row, [field]: value };
+        }
+
+        return row;
+      });
+    };
+
+    if (value || value === 0 || value === null) {
+      this.setProfitTargets(update(Number(value)));
+    } else if (field === "tradePrice") {
+      this.setProfitTargets(
+        update(this.getTradePrice(this.profitTargets[id].profit))
+      );
+    } else if (field === "profit") {
+      this.setProfitTargets(
+        update(this.getProfit(this.profitTargets[id].tradePrice))
+      );
+    }
+  }
+
+  @action.bound
   public updateProfitTargets(price: number) {
     const newProfitTargets = this.profitTargets.map((row) => {
       return { ...row, tradePrice: this.getTradePrice(row.profit, price) };
@@ -126,5 +155,10 @@ export class PlaceOrderStore {
   @action.bound
   private getTradePrice(profit: number, price = this.price): number {
     return price + price * profit * 0.01;
+  }
+
+  @action.bound
+  private getProfit(tradePrice: number, price = this.price): number {
+    return price ? +(((tradePrice - price) / price) * 100).toFixed(2) : 0;
   }
 }
